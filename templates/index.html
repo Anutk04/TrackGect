@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Government Engineering College, Thrissur - Campus Navigation</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        h1 {
+            text-align: center;
+            margin-top: 20px;
+        }
+        #map {
+            height: 600px;
+            width: 100%;
+        }
+        #status {
+            margin: 10px;
+            color: red;
+            text-align: center;
+        }
+        #navigate-form {
+            display: flex;
+            justify-content: center;
+            margin: 10px;
+            gap: 10px;
+        }
+        #navigate-form select, #navigate-form button {
+            padding: 10px;
+            font-size: 1em;
+        }
+        #navigate-form button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        #navigate-form button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Government Engineering College Thrissur</h1>
+    
+    <div id="status">Waiting for location access...</div>
+    
+    <form id="navigate-form">
+        <select id="start" required>
+            <option value="" disabled selected>Select Starting Location</option>
+            <option value="main entrance">Main Entrance</option>
+            <option value="main block">Main Block</option>
+            <option value="library">Library</option>
+            <option value="auditorium">Auditorium</option>
+            <option value="canteen">Canteen</option>
+            <option value="ccf">CCF</option>
+            <option value="academic block">Academic Block</option>
+            <option value="civil">Civil Department</option>
+            <option value="mech">Mechanical Department</option>
+            <option value="eee">Electrical and Electronics (EEE)</option>
+            <option value="chemical">Chemical Department</option>
+            <option value="pe">Production Department (PE)</option>
+            <option value="cs">Computer Science (CS)</option>
+            <option value="ec">Electronics and Communication (EC)</option>
+            <option value="mca">MCA Block</option>
+        </select>
+        <select id="end" required>
+            <option value="" disabled selected>Select Destination</option>
+            <option value="main entrance">Main Entrance</option>
+            <option value="main block">Main Block</option>
+            <option value="library">Library</option>
+            <option value="auditorium">Auditorium</option>
+            <option value="canteen">Canteen</option>
+            <option value="ccf">CCF</option>
+            <option value="academic block">Academic Block</option>
+            <option value="civil">Civil Department</option>
+            <option value="mech">Mechanical Department</option>
+            <option value="eee">Electrical and Electronics (EEE)</option>
+            <option value="chemical">Chemical Department</option>
+            <option value="pe">Production Department (PE)</option>
+            <option value="cs">Computer Science (CS)</option>
+            <option value="ec">Electronics and Communication (EC)</option>
+            <option value="mca">MCA Block</option>
+            
+            
+            
+        </select>
+        <button type="submit">Get Directions</button>
+    </form>
+
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+    
+    <script>
+        var map = L.map('map').setView([10.5538, 76.2220], 19);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 20,
+            minZoom: 18,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        var southWest = L.latLng(10.552439541640936, 76.21867287103241);
+        var northEast = L.latLng(10.555143489049364, 76.22631608609856);
+        var bounds = L.latLngBounds(southWest, northEast);
+        map.setMaxBounds(bounds);
+        map.on('drag', function() {
+            map.panInsideBounds(bounds, { animate: true });
+        });
+
+        var routingControl = null;
+
+        function updateDirections(startCoords, endCoords) {
+            if (routingControl) {
+                map.removeControl(routingControl);
+            }
+
+            routingControl = L.Routing.control({
+                waypoints: [
+                    L.latLng(startCoords.lat, startCoords.lng),
+                    L.latLng(endCoords.lat, endCoords.lng)
+                ],
+                routeWhileDragging: true
+            }).addTo(map);
+
+            map.fitBounds(L.latLngBounds([
+                [startCoords.lat, startCoords.lng],
+                [endCoords.lat, endCoords.lng]
+            ]));
+        }
+
+        function fetchDirections(startLocation, endLocation) {
+            fetch('/directions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'start=' + encodeURIComponent(startLocation) + '&end=' + encodeURIComponent(endLocation),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    document.getElementById('status').innerText = data.error;
+                    return;
+                }
+
+                document.getElementById('status').innerText = '';
+
+                var startCoords = data.start;
+                var endCoords = data.end;
+
+                updateDirections(startCoords, endCoords);
+            })
+            .catch(error => {
+                console.error('Error fetching directions:', error);
+                document.getElementById('status').innerText = 'Error fetching directions. Please try again.';
+            });
+        }
+
+        document.getElementById('navigate-form').onsubmit = function(e) {
+            e.preventDefault();
+
+            var startLocation = document.getElementById('start').value.toLowerCase();
+            var endLocation = document.getElementById('end').value.toLowerCase();
+
+            fetchDirections(startLocation, endLocation);
+        };
+    </script>
+</body>
+</html>
