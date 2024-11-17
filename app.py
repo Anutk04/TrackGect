@@ -11,7 +11,7 @@ users = {
 
 # Coordinates for locations on Government Engineering College, Thrissur campus
 locations = {
-        'main entrance': {'lat': 10.5657, 'lng': 76.2269},
+        'main entrance': {'lat': 10.555101892944363, 'lng': 76.2253838285237},
         'library': {'lat': 10.554025949121488, 'lng': 76.22478053174801},
         'auditorium': {'lat': 10.553749220961906, 'lng': 76.22442298654245},
         'canteen': {'lat': 10.553362429849095, 'lng': 76.22632869842572},
